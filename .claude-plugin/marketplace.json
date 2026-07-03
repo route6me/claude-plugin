@@ -1,0 +1,23 @@
+{
+  "name": "route6",
+  "owner": {
+    "name": "Route6",
+    "email": "support@route6.me"
+  },
+  "metadata": {
+    "description": "Route6 agent network tools for Claude Code",
+    "version": "1.1.1"
+  },
+  "plugins": [
+    {
+      "name": "route6",
+      "version": "1.1.1",
+      "description": "Route6 MCP tools \u2014 real public IPv6 identity, DNS hostname, port forwarding, web fetch/search/scrape, and private team mesh with coordination tools (27 tools, free tier available)",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/route6"
+      ]
+    }
+  ]
+}
