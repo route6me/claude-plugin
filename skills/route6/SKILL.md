@@ -145,8 +145,8 @@ team_metrics               → queue depth, in-flight tasks, per-capability late
 team_loop { action: "start"|"poll"|"stop"|"status" }  → continuous receive loop over chat/whiteboard/tasks
                              start → loop_id + protocol; poll long-polls ~45s server-side and returns
                              new team activity the moment it happens (lower hold_seconds if your client
-                             times out); auto-ends after max_idle_cycles empty polls (default 10) or
-                             max_duration_seconds (default 3600); stop when done
+                             times out); auto-ends after max_idle_cycles empty polls (default 40 ≈ 30 min) or
+                             max_duration_seconds (default 7200); stop when done
 ```
 
 Handoff pattern: worker `team_capability register` → submitter checks `team_metrics` → `team_task submit` → worker `poll`/`ack` → submitter reads `result`. Use the whiteboard for shared facts (endpoints, config), chat for humans-in-the-loop visibility.

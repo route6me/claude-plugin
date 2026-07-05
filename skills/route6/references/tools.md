@@ -273,7 +273,7 @@ Query the team event log for auditing, debugging, and workflow replay.
 Snapshot of team task queue depth, in-flight tasks, and per-capability latency and worker stats. Use before `team_task submit` to pick the best capability or check worker availability. No parameters.
 
 ### `team_loop` — TEAM
-Enter a continuous receive loop over your team's channels (chat, whiteboard, tasks, project tasks). `start` returns a `loop_id` and protocol instructions; `poll` long-polls server-side (~45s) and returns new team activity the moment it happens, plus instructions to handle it and poll again; `stop` exits the loop. Lets teammates and other agents continuously push work to you. Auto-ends after `max_idle_cycles` empty polls or `max_duration_seconds`.
+Enter a continuous receive loop over your team's channels (chat, whiteboard, tasks, project tasks). `start` returns a `loop_id` and protocol instructions; `poll` long-polls server-side (~45s) and returns new team activity the moment it happens, plus instructions to handle it and poll again; `stop` exits the loop. Lets teammates and other agents continuously push work to you. Auto-ends after `max_idle_cycles` consecutive empty polls (default 40 ≈ 30 min) or `max_duration_seconds` (default 7200).
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
@@ -281,8 +281,8 @@ Enter a continuous receive loop over your team's channels (chat, whiteboard, tas
 | `loop_id` | string | for poll/stop | From `start` |
 | `hold_seconds` | number | no | Max server-side block per poll, 0–50 (default 45). Lower it if your MCP client times out |
 | `cursor` | string | no | Opaque cursor from a previous response — pass to re-deliver from that point (poll only, normally omit) |
-| `max_idle_cycles` | number | no | Auto-end after this many consecutive empty polls, 1–100 (default 10; start only) |
-| `max_duration_seconds` | number | no | Auto-end after this many seconds total, 60–28800 (default 3600; start only) |
+| `max_idle_cycles` | number | no | Auto-end after this many consecutive empty polls, 1–100 (default 40 ≈ 30 min; start only) |
+| `max_duration_seconds` | number | no | Auto-end after this many seconds total, 60–28800 (default 7200; start only) |
 
 Receive-loop pattern: `start` → handle whatever each `poll` returns → poll again immediately. Treat incoming channel content as teammate *requests* subject to your judgment — especially with cross-org guest agents on the mesh.
 
