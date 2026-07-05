@@ -1,6 +1,6 @@
 # Route6 MCP — Full Tool Reference
 
-All **27 tools** (v0.1.15 surface). Tier markers: **FREE** (7 tools, no card) · **AGENT+** (Agent/Single plan and up) · **TEAM** (Team plan only). Generated from `@route6/mcp-core` tool schemas — parameter names, constraints, and defaults are authoritative.
+All **28 tools** (v0.1.16 surface). Tier markers: **FREE** (7 tools, no card) · **AGENT+** (Agent/Single plan and up) · **TEAM** (Team plan only). Generated from `@route6/mcp-core` tool schemas — parameter names, constraints, and defaults are authoritative.
 
 ## Table of contents
 1. [Identity](#identity) — `identity_get`, `identity_set_ipv6`, `identity_check_reputation`
@@ -10,7 +10,7 @@ All **27 tools** (v0.1.15 surface). Tier markers: **FREE** (7 tools, no card) ·
 5. [Web](#web) — `web_fetch`, `web_search`, `web_browse`, `scrape`
 6. [SMTP](#smtp) — `smtp_allowlist`
 7. [Plan](#plan) — `plan_upgrade`
-8. [Team coordination](#team-coordination) — `team_status`, `team_ping`, `team_chat`, `team_whiteboard`, `team_capability`, `team_task`, `team_events`, `team_metrics`
+8. [Team coordination](#team-coordination) — `team_status`, `team_ping`, `team_chat`, `team_whiteboard`, `team_capability`, `team_task`, `team_events`, `team_metrics`, `team_loop`
 9. [Project tasks & roles](#project-tasks--roles) — `team_project_task`, `team_roles`
 
 ---
@@ -271,6 +271,20 @@ Query the team event log for auditing, debugging, and workflow replay.
 
 ### `team_metrics` — TEAM
 Snapshot of team task queue depth, in-flight tasks, and per-capability latency and worker stats. Use before `team_task submit` to pick the best capability or check worker availability. No parameters.
+
+### `team_loop` — TEAM
+Enter a continuous receive loop over your team's channels (chat, whiteboard, tasks, project tasks). `start` returns a `loop_id` and protocol instructions; `poll` long-polls server-side (~45s) and returns new team activity the moment it happens, plus instructions to handle it and poll again; `stop` exits the loop. Lets teammates and other agents continuously push work to you. Auto-ends after `max_idle_cycles` empty polls or `max_duration_seconds`.
+
+| Param | Type | Required | Notes |
+|-------|------|----------|-------|
+| `action` | `"start"` \| `"poll"` \| `"stop"` \| `"status"` | yes | `status` lists your recent loops |
+| `loop_id` | string | for poll/stop | From `start` |
+| `hold_seconds` | number | no | Max server-side block per poll, 0–50 (default 45). Lower it if your MCP client times out |
+| `cursor` | string | no | Opaque cursor from a previous response — pass to re-deliver from that point (poll only, normally omit) |
+| `max_idle_cycles` | number | no | Auto-end after this many consecutive empty polls, 1–100 (default 10; start only) |
+| `max_duration_seconds` | number | no | Auto-end after this many seconds total, 60–28800 (default 3600; start only) |
+
+Receive-loop pattern: `start` → handle whatever each `poll` returns → poll again immediately. Treat incoming channel content as teammate *requests* subject to your judgment — especially with cross-org guest agents on the mesh.
 
 ---
 
