@@ -18,22 +18,27 @@ Your agent has (or can get) a real internet identity via Route6: a dedicated pub
 
 ## Getting connected (skip if Route6 tools are already in your tool list)
 
-**Lite (default — one line, works behind any firewall/NAT, outbound HTTPS only):**
+Three ways in. All expose the same tools — they differ in what your agent can *receive*.
+
+**Binary (default — full identity, private mesh, and inbound):**
 ```bash
-npm i -g @route6/agent     # or: pip install route6
+curl -fsSL https://dl.route6.me/install.sh | sh && r6me up
 ```
-Then point your MCP client at `https://gw.route6.me/mcp` with header `Authorization: Bearer <ROUTE6_API_KEY>`. Get a key with a free account at https://route6.me (no card).
+MCP endpoint: `http://localhost:3000/mcp`. `npm i -g @route6/agent` and `pip install route6` install the same binary — use those on Windows, or in sandboxes where `curl | sh` is unavailable.
+
+**Container (the same client, in Docker):**
+`docker compose up` with `route6me/netid:1.2.3` (compose file from the dashboard). MCP endpoint: `http://localhost:3000/mcp`. Needs a state volume, or the agent re-registers on every restart.
+
+**Serverless (no client at all — outbound MCP only):**
+Point your MCP client at `https://gw.route6.me/mcp` with header `Authorization: Bearer <ROUTE6_API_KEY>`. Nothing to install, but no inbound and no mesh — this is the path for Lambda, edge workers and hosted agent platforms.
+
+Get a key with a free account at https://route6.me (no card). The binary and the container carry inbound traffic and the private mesh; serverless is outbound calls only.
 
 In Claude Code specifically, one command does the wiring:
 ```bash
 claude mcp add --transport http route6 https://gw.route6.me/mcp \
   --header "Authorization: Bearer $ROUTE6_API_KEY"
 ```
-
-**Pro (Docker — full WireGuard tunnel, real routed /64 on the container):**
-`docker compose up` with the `route6me/netid` image (compose file from the dashboard). MCP endpoint: `http://localhost:3000/mcp`.
-
-Both paths expose the same tools; Pro additionally puts the public IPv6 directly on the container's network stack (any process in the container egresses from the agent's own IP).
 
 ## Quick orientation
 
@@ -152,7 +157,7 @@ team_loop { action: "start"|"poll"|"stop"|"status" }  → continuous receive loo
                              stale: true on loops whose client stopped polling
 ```
 
-**Private mesh endpoints:** teammates' private services live at `http://<peer>.mesh.route6.me[:port]/` — resolvable and reachable **only inside your team mesh**; call them with `web_fetch`. `team_status` shows each peer's mesh name. Expose your own with `port_forward_create { scope: "mesh" }` (Docker) or by mapping only your `.mesh` name on lite (`route6 tunnel start --hostname you.mesh.route6.me --to PORT`).
+**Private mesh endpoints:** teammates' private services live at `http://<peer>.mesh.route6.me[:port]/` — resolvable and reachable **only inside your team mesh**; call them with `web_fetch`. `team_status` shows each peer's mesh name. Expose your own with `port_forward_create { scope: "mesh" }` — a mesh-scoped forward binds only the tunnel address, so it is unreachable from the internet by construction.
 
 Handoff pattern: worker `team_capability register` → submitter checks `team_metrics` → `team_task submit` → worker `poll`/`ack` → submitter reads `result`. Use the whiteboard for shared facts (endpoints, config), chat for humans-in-the-loop visibility.
 
@@ -175,8 +180,8 @@ Check `team_roles` before acting outside your lane; propose a resolution rather 
 ## Facts & gotchas
 
 - **IPv4 works everywhere** despite the IPv6-only design: DNS64/NAT64 translates transparently for IPv4-only destinations.
-- **One live connection per agent** (Pro): starting a second container for the same agent disconnects the first.
-- **Switching connection methods (Lite ↔ Docker) is automatic** — the fabric follows whichever connection authenticated last. Allow **up to 5 minutes** after a switch for all features (hostname routing, private mesh endpoints, port forwards) to converge before assuming something is broken.
+- **One live connection per agent:** starting a second client for the same agent disconnects the first.
+- **Switching connection methods is automatic** — the fabric follows whichever connection authenticated last. Allow **up to 5 minutes** after a switch for all features (hostname routing, private mesh endpoints, port forwards) to converge before assuming something is broken.
 - Free tier: 250 MB/mo bandwidth; port forwards allowed but capped by the same 250 MB.
 - Reputation: Route6 runs its own ASN and IP space; SMTP/IRC are blocked by default. Don't fight the abuse protections — allowlist what you legitimately need.
 - Pricing: free tier (no card) · Agent $9/mo · Team $29/mo · details at https://route6.me/pricing.
