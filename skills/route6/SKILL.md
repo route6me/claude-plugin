@@ -44,11 +44,11 @@ claude mcp add --transport http route6 https://gw.route6.me/mcp \
 
 | Goal | Tool |
 |------|------|
-| What's my IP / identity / plan? | `identity_get` |
-| Rotate or pin my public IPv6 | `identity_set_ipv6` |
-| Is my IP on a blocklist? | `identity_check_reputation` |
+| What's my IP / identity / plan? | `identity { action: "get" }` |
+| Rotate or pin my public IPv6 | `identity { action: "set_ipv6" }` |
+| Is my IP on a blocklist? | `identity { action: "check_reputation" }` |
 | Register a public DNS name | `hostname_register` |
-| Expose a port to the internet | `port_forward_create` |
+| Expose a port to the internet | `port_forward { action: "create" }` |
 | Fetch a URL from my IP | `web_fetch` |
 | Search / browse / scrape the web | `web_search` / `web_browse` / `scrape` |
 | Who's in my team mesh? | `team_status` |
@@ -60,8 +60,8 @@ Full parameter reference for all 28 tools: [references/tools.md](references/tool
 
 ## Tier availability (28 tools total)
 
-- **Free (7):** `identity_get`, `identity_set_ipv6`, `identity_check_reputation`, `net_ping`, `net_traceroute`, `net_dns_resolve`, `web_fetch` (no screenshot / JS render). 250 MB/mo bandwidth.
-- **Agent/Single plan (17):** adds `hostname_register`, `port_forward_create`, `port_forward_list`, `port_forward_delete`, `port_forward_tls`, `web_search`, `web_browse`, `scrape`, `smtp_allowlist`, `plan_upgrade`; `web_fetch` gains `screenshot` + `render_js`. Unmetered bandwidth.
+- **Free (7):** `identity { action: "get" }`, `identity { action: "set_ipv6" }`, `identity { action: "check_reputation" }`, `net { action: "ping" }`, `net { action: "traceroute" }`, `net { action: "dns_resolve" }`, `web_fetch` (no screenshot / JS render). 250 MB/mo bandwidth.
+- **Agent/Single plan (17):** adds `hostname_register`, `port_forward { action: "create" }`, `port_forward { action: "list" }`, `port_forward { action: "delete" }`, `port_forward_tls`, `web_search`, `web_browse`, `scrape`, `smtp_allowlist`, `plan_upgrade`; `web_fetch` gains `screenshot` + `render_js`. Unmetered bandwidth.
 - **Team plan (28):** adds `team_status`, `team_ping`, `team_chat`, `team_whiteboard`, `team_capability`, `team_task`, `team_events`, `team_metrics`, `team_loop`, `team_project_task`, `team_roles`.
 
 If a tool returns an upgrade-required error, call `plan_upgrade` for a Stripe checkout URL.
@@ -69,13 +69,13 @@ If a tool returns an upgrade-required error, call `plan_upgrade` for a Stripe ch
 ## Identity
 
 ```
-identity_get                     → active IPv6, /64 prefix, tunnel IP, hostname, plan tier
-identity_set_ipv6 {}             → rotate to a random address inside your /64
-identity_set_ipv6 { address }    → pin a specific address (must be inside your /64)
-identity_check_reputation        → DNSBL check on the current IP; rotate if listed
+identity (action: get)                     → active IPv6, /64 prefix, tunnel IP, hostname, plan tier
+identity (action: set_ipv6) {}             → rotate to a random address inside your /64
+identity (action: set_ipv6) { address }    → pin a specific address (must be inside your /64)
+identity (action: check_reputation)        → DNSBL check on the current IP; rotate if listed
 ```
 
-Rotation is instant (the whole /64 is routed to you — no server-side reload). Typical hygiene loop: `identity_check_reputation` → if listed, `identity_set_ipv6` → re-check.
+Rotation is instant (the whole /64 is routed to you — no server-side reload). Typical hygiene loop: `identity { action: "check_reputation" }` → if listed, `identity { action: "set_ipv6" }` → re-check.
 
 ## Hostname (Agent/Team)
 
@@ -89,21 +89,21 @@ DNS propagation takes up to 60 seconds. The hostname tracks your active IPv6 —
 ## Port forwarding (Agent/Team)
 
 ```
-port_forward_create { external_port, internal_port, protocol, ttl_seconds?, scope? }
-port_forward_list                → active forwards with bridge status + scope
-port_forward_delete              → remove a forward
+port_forward (action: create) { external_port, internal_port, protocol, ttl_seconds?, scope? }
+port_forward (action: list)                → active forwards with bridge status + scope
+port_forward (action: delete)              → remove a forward
 port_forward_tls { port, action: "enable"|"disable" }  → Route6 TLS termination
 ```
 
 - Exposes a port bridged to the host machine. Max 10 forwards. **`scope` controls exposure**: `"public"` (default) binds your public IPv6 — internet-reachable; `"mesh"` binds only your tunnel address — reachable **only** by agents in your team mesh at `you.mesh.route6.me:<port>` (genuinely no public listener); `"both"` creates two listeners. The result echoes the exposure so there's never doubt what you just opened.
 - `ttl_seconds` auto-expires the forward — good for one-shot OAuth callbacks or webhooks.
 - Default is TCP passthrough (your own TLS runs end-to-end). `port_forward_tls enable` switches to Route6's `*.on.route6.me` wildcard cert — instant valid HTTPS, **requires a registered hostname**.
-- Webhook recipe: `hostname_register { name }` → `port_forward_create { external_port: 8443, internal_port: 8080, protocol: "tcp" }` → `port_forward_tls { port: 8443, action: "enable" }` → give out `https://mybot.on.route6.me:8443/hook`.
+- Webhook recipe: `hostname_register { name }` → `port_forward { action: "create", external_port: 8443, internal_port: 8080, protocol: "tcp" }` → `port_forward_tls { port: 8443, action: "enable" }` → give out `https://mybot.on.route6.me:8443/hook`.
 
 ## Network diagnostics
 
 ```
-net_ping { host }         net_traceroute { host }         net_dns_resolve { hostname }
+net (action: ping) { host }         net (action: traceroute) { host }         net (action: dns_resolve) { hostname }
 ```
 
 All run from your IPv6 identity. IPv4-only targets work transparently (DNS64/NAT64) — an AAAA answer starting `64:ff9b::` is a NAT64-synthesized IPv4 address, not an error.
@@ -157,7 +157,7 @@ team_loop { action: "start"|"poll"|"stop"|"status" }  → continuous receive loo
                              stale: true on loops whose client stopped polling
 ```
 
-**Private mesh endpoints:** teammates' private services live at `http://<peer>.mesh.route6.me[:port]/` — resolvable and reachable **only inside your team mesh**; call them with `web_fetch`. `team_status` shows each peer's mesh name. Expose your own with `port_forward_create { scope: "mesh" }` — a mesh-scoped forward binds only the tunnel address, so it is unreachable from the internet by construction.
+**Private mesh endpoints:** teammates' private services live at `http://<peer>.mesh.route6.me[:port]/` — resolvable and reachable **only inside your team mesh**; call them with `web_fetch`. `team_status` shows each peer's mesh name. Expose your own with `port_forward { action: "create", scope: "mesh" }` — a mesh-scoped forward binds only the tunnel address, so it is unreachable from the internet by construction.
 
 Handoff pattern: worker `team_capability register` → submitter checks `team_metrics` → `team_task submit` → worker `poll`/`ack` → submitter reads `result`. Use the whiteboard for shared facts (endpoints, config), chat for humans-in-the-loop visibility.
 

@@ -3,10 +3,10 @@
 All **28 tools** (v0.1.16 surface). Tier markers: **FREE** (7 tools, no card) · **AGENT+** (Agent/Single plan and up) · **TEAM** (Team plan only). Generated from `@route6/mcp-core` tool schemas — parameter names, constraints, and defaults are authoritative.
 
 ## Table of contents
-1. [Identity](#identity) — `identity_get`, `identity_set_ipv6`, `identity_check_reputation`
+1. [Identity](#identity) — `identity { action: "get" }`, `identity { action: "set_ipv6" }`, `identity { action: "check_reputation" }`
 2. [Hostname](#hostname) — `hostname_register`
-3. [Port forwarding](#port-forwarding) — `port_forward_create`, `port_forward_list`, `port_forward_delete`, `port_forward_tls`
-4. [Network diagnostics](#network-diagnostics) — `net_ping`, `net_traceroute`, `net_dns_resolve`
+3. [Port forwarding](#port-forwarding) — `port_forward { action: "create" }`, `port_forward { action: "list" }`, `port_forward { action: "delete" }`, `port_forward_tls`
+4. [Network diagnostics](#network-diagnostics) — `net { action: "ping" }`, `net { action: "traceroute" }`, `net { action: "dns_resolve" }`
 5. [Web](#web) — `web_fetch`, `web_search`, `web_browse`, `scrape`
 6. [SMTP](#smtp) — `smtp_allowlist`
 7. [Plan](#plan) — `plan_upgrade`
@@ -17,12 +17,12 @@ All **28 tools** (v0.1.16 surface). Tier markers: **FREE** (7 tools, no card) ·
 
 ## Identity
 
-### `identity_get` — FREE
+### `identity { action: "get" }` — FREE
 Get your current internet identity: active IPv6, /64 prefix and all addresses in it, tunnel IP, hostname, and IPv4 exit.
 
 No parameters.
 
-### `identity_set_ipv6` — FREE
+### `identity { action: "set_ipv6" }` — FREE
 Set or rotate your public IPv6 address within your /64. Omit `address` to rotate to a random unused address; provide it to pin a specific one.
 
 | Param | Type | Required | Notes |
@@ -31,7 +31,7 @@ Set or rotate your public IPv6 address within your /64. Omit `address` to rotate
 
 Rotation is instant — the whole /64 is routed to you, no server-side reload.
 
-### `identity_check_reputation` — FREE
+### `identity { action: "check_reputation" }` — FREE
 Check if your current IP address is on any spam or abuse blocklists (DNSBL check).
 
 | Param | Type | Required | Notes |
@@ -55,7 +55,7 @@ DNS propagation up to 60 s. Free tier gets one auto-assigned `free-*.on.route6.m
 
 ## Port forwarding
 
-### `port_forward_create` — AGENT+
+### `port_forward { action: "create" }` — AGENT+
 Expose a host-machine port via your agent's IPv6. `scope` controls exposure: `"public"` (default) binds the public address — internet-reachable; `"mesh"` binds only the tunnel address — reachable **only** by your team mesh at `you.mesh.route6.me:<port>`; `"both"` creates two listeners. The result echoes the exposure.
 
 | Param | Type | Required | Notes |
@@ -69,10 +69,10 @@ Expose a host-machine port via your agent's IPv6. `scope` controls exposure: `"p
 
 Max 10 forwards. `ttl_seconds` is ideal for one-shot OAuth callbacks and webhooks. Mesh-only forwards are WireGuard-encrypted end-to-end — `port_forward_tls` applies to public listeners only.
 
-### `port_forward_list` — AGENT+
+### `port_forward { action: "list" }` — AGENT+
 Show all active port forwards with socat (bridge) status and scope. No parameters.
 
-### `port_forward_delete` — AGENT+
+### `port_forward { action: "delete" }` — AGENT+
 Remove a port forward and kill the bridge process.
 
 | Param | Type | Required | Notes |
@@ -93,7 +93,7 @@ Default (disabled) is TCP passthrough — your own TLS runs end-to-end.
 
 ## Network diagnostics
 
-### `net_ping` — FREE
+### `net { action: "ping" }` — FREE
 Ping a host from your Route6 identity. Works for both IPv4 and IPv6 destinations (DNS64 handles IPv4).
 
 | Param | Type | Required | Notes |
@@ -101,14 +101,14 @@ Ping a host from your Route6 identity. Works for both IPv4 and IPv6 destinations
 | `host` | string | yes | Hostname or IP address |
 | `count` | number | no | Number of pings, 1–10 (default 4) |
 
-### `net_traceroute` — FREE
+### `net { action: "traceroute" }` — FREE
 Traceroute from your Route6 identity to a host.
 
 | Param | Type | Required | Notes |
 |-------|------|----------|-------|
 | `host` | string | yes | Hostname or IP address |
 
-### `net_dns_resolve` — FREE
+### `net { action: "dns_resolve" }` — FREE
 Resolve a hostname via DNS64. Shows real AAAA records and synthesized NAT64 addresses for IPv4-only hosts (these start with `64:ff9b::` — not an error).
 
 | Param | Type | Required | Notes |

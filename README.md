@@ -24,10 +24,10 @@ The plugin ships the skill that teaches Claude *when and how* to use the tools �
 
 | Area | Tools |
 |------|-------|
-| Identity (free) | `identity_get`, `identity_set_ipv6`, `identity_check_reputation` |
-| Diagnostics (free) | `net_ping`, `net_traceroute`, `net_dns_resolve` |
+| Identity (free) | `identity { action: "get" }`, `identity { action: "set_ipv6" }`, `identity { action: "check_reputation" }` |
+| Diagnostics (free) | `net { action: "ping" }`, `net { action: "traceroute" }`, `net { action: "dns_resolve" }` |
 | Web (free basic) | `web_fetch`; paid: `web_search`, `web_browse`, `scrape` |
-| Inbound (Agent plan) | `hostname_register`, `port_forward_create/list/delete/tls` |
+| Inbound (Agent plan) | `hostname_register`, `port_forward` (create/list/delete), `port_forward_secure`, `port_forward_tls` |
 | Team (Team plan) | mesh status/ping, chat, whiteboard, capabilities, task queue, project tasks, roles |
 
 More: [docs.route6.me](https://docs.route6.me) · [examples](https://github.com/route6me/examples) · [route6.me/pricing](https://route6.me/pricing)
