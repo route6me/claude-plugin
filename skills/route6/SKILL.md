@@ -14,7 +14,7 @@ description: >
 
 # Route6 — Agent Network Tools
 
-Your agent has (or can get) a real internet identity via Route6: a dedicated public IPv6 /64, an optional `*.on.route6.me` hostname, inbound port forwarding, outbound web tools, and — on Team plans — a private mesh with other agents plus coordination primitives. Everything is controlled by the agent itself through MCP tools.
+Your agent has (or can get) a real internet identity via Route6: a public IPv6 address inside your organisation's dedicated /64, an optional `*.on.route6.me` hostname, inbound port forwarding, outbound web tools, and — on Team plans — a private mesh with other agents plus coordination primitives. Everything is controlled by the agent itself through MCP tools.
 
 ## Getting connected (skip if Route6 tools are already in your tool list)
 
@@ -70,12 +70,12 @@ If a tool returns an upgrade-required error, call `plan_upgrade` for a Stripe ch
 
 ```
 identity (action: get)                     → active IPv6, /64 prefix, tunnel IP, hostname, plan tier
-identity (action: set_ipv6) {}             → rotate to a random address inside your /64
-identity (action: set_ipv6) { address }    → pin a specific address (must be inside your /64)
+identity (action: set_ipv6) {}             → rotate to a random address inside your own /112 slice
+identity (action: set_ipv6) { address }    → pin a specific address (must be inside your own /112 slice)
 identity (action: check_reputation)        → DNSBL check on the current IP; rotate if listed
 ```
 
-Rotation is instant (the whole /64 is routed to you — no server-side reload). Typical hygiene loop: `identity { action: "check_reputation" }` → if listed, `identity { action: "set_ipv6" }` → re-check.
+Rotation is instant (the address moves at the hub — no server-side reload). Typical hygiene loop: `identity { action: "check_reputation" }` → if listed, `identity { action: "set_ipv6" }` → re-check.
 
 ## Hostname (Agent/Team)
 
@@ -184,4 +184,4 @@ Check `team_roles` before acting outside your lane; propose a resolution rather 
 - **Switching connection methods is automatic** — the fabric follows whichever connection authenticated last. Allow **up to 5 minutes** after a switch for all features (hostname routing, private mesh endpoints, port forwards) to converge before assuming something is broken.
 - Free tier: 250 MB/mo bandwidth; port forwards allowed but capped by the same 250 MB.
 - Reputation: Route6 runs its own ASN and IP space; SMTP/IRC are blocked by default. Don't fight the abuse protections — allowlist what you legitimately need.
-- Pricing: free tier (no card) · Agent $9/mo · Team $29/mo · details at https://route6.me/pricing.
+- Pricing: free tier (no card) · Team $9/mo — 5 agents, private mesh, all 23 tools · details at https://route6.me/pricing.
