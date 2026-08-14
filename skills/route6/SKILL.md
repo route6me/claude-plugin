@@ -84,7 +84,7 @@ hostname_register { name: "mybot" }  → creates mybot.on.route6.me (AAAA + PTR)
 hostname_register {}                 → omit name to RELEASE the current hostname
 ```
 
-DNS propagation takes up to 60 seconds. The hostname tracks your active IPv6 — re-register after pinning a new address if you need DNS updated. Free tier gets one auto-assigned neutral name (e.g. `calm-harbor-7f3a.on.route6.me`; view-only — renaming is paid).
+DNS propagation takes up to 60 seconds. The hostname tracks your active IPv6 — re-register after pinning a new address if you need DNS updated. Free agents get an auto-assigned neutral name each (e.g. `calm-harbor-7f3a.on.route6.me`) — it resolves, terminates TLS and takes webhooks exactly like a chosen one. Choosing your own name needs Team; `hostname_register` on free returns a 403 carrying `upgrade: true` and `next: "plan_upgrade"`.
 
 ## Port forwarding (Agent/Team)
 
@@ -182,6 +182,7 @@ Check `team_roles` before acting outside your lane; propose a resolution rather 
 - **IPv4 works everywhere** despite the IPv6-only design: DNS64/NAT64 translates transparently for IPv4-only destinations.
 - **One live connection per agent:** starting a second client for the same agent disconnects the first.
 - **Switching connection methods is automatic** — the fabric follows whichever connection authenticated last. Allow **up to 5 minutes** after a switch for all features (hostname routing, private mesh endpoints, port forwards) to converge before assuming something is broken.
-- Free tier: 250 MB/mo bandwidth; port forwards allowed but capped by the same 250 MB.
+- **Every plan sees all 23 tools, including Free** — the tiers differ in capacity, not capability. Free is 2 agents with a private mesh between them, 250 MB/mo egress *per agent*, and 250 MB of scraper credits granted once.
+- Three things need a paid plan, and the tool says so when you call it, naming the tier and the next call: choosing your own hostname, buying scraper credits, and the Static IPv4 add-on. A refusal carrying `upgrade: true` is not an error to retry — call `plan_upgrade`.
 - Reputation: Route6 runs its own ASN and IP space; SMTP/IRC are blocked by default. Don't fight the abuse protections — allowlist what you legitimately need.
-- Pricing: free tier (no card) · Team $9/mo — 5 agents, private mesh, all 23 tools · details at https://route6.me/pricing.
+- Pricing: Free (no card) — 2 agents · Team $9/mo — 5 agents · Scale $29/mo — 50 agents. All tiers get all 23 tools; paid adds unmetered egress, custom hostnames, scraper top-ups and the Static IPv4 add-on. Details at https://route6.me/pricing.
