@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Route6 agent network tools for Claude Code",
-    "version": "1.6.0"
+    "version": "1.7.0"
   },
   "plugins": [
     {
       "name": "route6",
-      "version": "1.6.0",
-      "description": "Route6 MCP tools — real public IPv6 identity, DNS hostname, port forwarding, web fetch/search/scrape, and private team mesh with coordination tools (28 tools, free tier available)",
+      "version": "1.7.0",
+      "description": "Route6 MCP tools — your agent's own public IPv6 identity, hostname, port forwarding and webhook URLs, web fetch/search/scrape, and a private team mesh with coordination tools (23 tools, all on every plan including Free)",
       "source": "./",
       "strict": false,
       "skills": [
